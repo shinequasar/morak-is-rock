@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>담타 ULTRA | 비흡연자를 위한</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0d0d14;
+  --surface: #16161f;
+  --surface2: #1e1e2a;
+  --amber: #f5a623;
+  --ember: #ff6b35;
+  --text: #e8e8f0;
+  --dim: #888;
+  --gold: #ffd700;
+  --accent: #7c5cbf;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #222;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--dim);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+.tab:hover:not(.active) { color: var(--text); }
+
+/* ===== PANELS ===== */
+.panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.panel.active { display: flex; }
+
+/* ===== MAIN PANEL ===== */
+.main-header {
+  text-align: center;
+  padding: 16px 0 8px;
+  flex-shrink: 0;
+}
+.main-header h1 {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.95rem;
+  color: var(--dim);
+  letter-spacing: 3px;
+}
+
+#scene {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#cig-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+
+#cigarette {
+  position: relative;
+  width: 14px;
+  height: 160px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cig-tip {
+  width: 14px;
+  height: 20px;
+  background: linear-gradient(to bottom, #aaa, #888);
+  border-radius: 3px 3px 0 0;
+  position: relative;
+  overflow: visible;
+}
+.ember {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #fff 0%, #ffdd00 30%, #ff6600 60%, transparent 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  box-shadow: 0 0 14px 6px rgba(255,100,0,0.7);
+  pointer-events: none;
+}
+.cig-body {
+  width: 14px;
+  height: 100px;
+  background: linear-gradient(to right, #f5f5f0, #e8e8e0, #f5f5f0);
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  transition: background 0.5s;
+}
+.cig-filter {
+  width: 14px;
+  height: 40px;
+  background: linear-gradient(to bottom, #c8a97e, #b8946a);
+  border-radius: 0 0 3px 3px;
+  position: relative;
+}
+.cig-filter::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: #e8c4a0;
+}
+
+#cigarette.lit .ember { opacity: 1; }
+
+/* Chopstick holder */
+#chopstick-holder {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  width: 90px;
+}
+#chopstick-holder.visible { display: block; }
+
+/* Smoke */
+.smoke-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: rise linear forwards;
+}
+@keyframes rise {
+  0%   { transform: translate(0,0) scale(1); opacity: 0.8; }
+  30%  { transform: translate(var(--dx1), -100px) scale(2.2); opacity: 0.55; }
+  65%  { transform: translate(var(--dx2), -220px) scale(3.8); opacity: 0.28; }
+  100% { transform: translate(var(--dx3), -370px) scale(5.5); opacity: 0; }
+}
+
+/* Wind overlay */
+#wind-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(to right, transparent 0%, rgba(160,210,255,0.12) 50%, transparent 100%);
+}
+#wind-overlay.active { animation: wind-sweep 1.1s ease-in-out forwards; }
+@keyframes wind-sweep {
+  0%   { opacity: 0; transform: translateX(-100%); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(120%); }
+}
+
+/* Fog accumulation layer */
+#fog-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(170, 175, 185, 0);
+  transition: background 1.5s ease;
+  z-index: 2;
+}
+#fog-layer.clearing {
+  transition: background 1.2s ease;
+}
+
+/* Bottom controls */
+.main-controls {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-top: 1px solid #222;
+  flex-shrink: 0;
+}
+.ctrl-btn {
+  flex: 1;
+  padding: 9px 4px;
+  background: var(--surface2);
+  border: 1px solid #2e2e3e;
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.68rem;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.2;
+}
+.ctrl-btn .icon { font-size: 1.15rem; }
+.ctrl-btn:active { transform: scale(0.95); }
+.ctrl-btn:hover { background: #252535; border-color: var(--amber); }
+.ctrl-btn.highlight { border-color: var(--amber); color: var(--amber); background: rgba(245,166,35,0.08); }
+.ctrl-btn.locked { opacity: 0.38; cursor: not-allowed; }
+.ctrl-btn.locked:hover { background: var(--surface2); border-color: #2e2e3e; }
+
+/* Hint */
+#hint {
+  position: absolute;
+  top: calc(50% + 95px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--dim);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  animation: blink 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes blink { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+/* Friend cigarette (맞담) */
+#friend-cig {
+  position: absolute;
+  right: 22%;
+  top: 50%;
+  transform: translate(120px, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.5s, transform 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+}
+#friend-cig.visible { opacity: 1; transform: translate(0, -50%); }
+#friend-cig .f-tip {
+  width: 12px; height: 16px;
+  background: linear-gradient(to bottom, #999, #777);
+  border-radius: 2px 2px 0 0;
+  position: relative;
+}
+#friend-cig .f-ember {
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  width: 10px; height: 10px;
+  background: radial-gradient(circle, #fff 0%, #ffee00 30%, #ff6600 70%, transparent 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 10px 4px rgba(255,100,0,0.65);
+  animation: epulse 1s ease-in-out infinite;
+}
+@keyframes epulse { 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.25);} }
+#friend-cig .f-body {
+  width: 12px; height: 65px;
+  background: linear-gradient(to right, #f0f0eb, #e5e5dd, #f0f0eb);
+}
+#friend-cig .f-filter {
+  width: 12px; height: 25px;
+  background: linear-gradient(to bottom, #d4876b, #b8946a);
+  border-radius: 0 0 2px 2px;
+}
+
+#friend-label {
+  position: absolute;
+  right: calc(22% + 20px);
+  top: calc(50% - 80px);
+  font-size: 0.68rem;
+  color: var(--dim);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.5s;
+  background: var(--surface);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #2a2a3a;
+}
+#friend-label.visible { opacity: 1; }
+
+/* Matchdam animation */
+@keyframes matchdam-anim {
+  0%   { transform: translateX(0); }
+  35%  { transform: translateX(65px); }
+  65%  { transform: translateX(65px); }
+  100% { transform: translateX(0); }
+}
+
+/* Skin classes */
+#cigarette.skin-gold .cig-body { background: linear-gradient(to right, #c8a000, #ffd700, #c8a000) !important; }
+#cigarette.skin-gold .cig-tip  { background: linear-gradient(to bottom, #ffd700, #c8a000) !important; }
+#cigarette.skin-menthol .cig-body   { background: linear-gradient(to right, #c0f0d0, #88e8aa, #c0f0d0) !important; }
+#cigarette.skin-menthol .cig-filter { background: linear-gradient(to bottom, #55cc88, #338855) !important; }
+#cigarette.skin-diamond .cig-body   { background: linear-gradient(135deg, #b0e4ff, #ffffff, #b0e4ff, #80c0ff) !important; animation: dshine 1.5s linear infinite; }
+@keyframes dshine { 0%{filter:hue-rotate(0deg) brightness(1.1);} 100%{filter:hue-rotate(360deg) brightness(1.3);} }
+#cigarette.skin-rainbow .cig-body   { background: linear-gradient(to bottom, #ff4444, #ff8800, #ffff00, #44ff44, #0088ff, #8800ff) !important; }
+#cigarette.skin-black .cig-body     { background: linear-gradient(to right, #1a1a1a, #333, #1a1a1a) !important; }
+#cigarette.skin-black .cig-tip      { background: linear-gradient(to bottom, #333, #111) !important; }
+
+/* ===== ROOM PANEL ===== */
+.room-header {
+  padding: 11px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid #222;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.room-title { font-family: 'Black Han Sans', sans-serif; font-size: 0.9rem; color: var(--amber); }
+.room-count { font-size: 0.72rem; color: var(--dim); display: flex; align-items: center; gap: 4px; }
+.live-dot {
+  display: inline-block; width: 7px; height: 7px;
+  background: #44ff88; border-radius: 50%;
+  animation: lpulse 1.5s ease-in-out infinite;
+}
+@keyframes lpulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(68,255,136,0.5);} 50%{opacity:0.6;box-shadow:0 0 0 4px rgba(68,255,136,0);} }
+
+.smokers-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.smoker-card {
+  background: var(--surface2);
+  border: 1px solid #2a2a3a;
+  border-radius: 10px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slidein 0.3s ease;
+}
+@keyframes slidein { from{opacity:0;transform:translateY(-10px);} to{opacity:1;transform:translateY(0);} }
+.smoker-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.smoker-info { flex: 1; }
+.smoker-name { font-size: 0.82rem; font-weight: 700; }
+.smoker-status { font-size: 0.67rem; color: var(--dim); margin-top: 1px; }
+.smoker-cig-anim { animation: cigbob 2s ease-in-out infinite; font-size: 0.85rem; }
+@keyframes cigbob { 0%,100%{transform:translateY(0);opacity:0.6;} 50%{transform:translateY(-2px);opacity:1;} }
+
+.chat-area {
+  border-top: 1px solid #1e1e28;
+  background: var(--surface);
+  padding: 8px 12px;
+  max-height: 140px;
+  min-height: 80px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.chat-msg { font-size: 0.73rem; animation: fadein 0.3s ease; line-height: 1.5; }
+@keyframes fadein { from{opacity:0;} to{opacity:1;} }
+.chat-msg .nick { font-weight: 700; margin-right: 4px; }
+.chat-msg.system { color: var(--dim); font-style: italic; }
+.chat-msg.you .nick { color: #7adfff !important; }
+
+.chat-input-row {
+  display: flex;
+  gap: 7px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-top: 1px solid #2a2a3a;
+  flex-shrink: 0;
+}
+.chat-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid #333;
+  border-radius: 20px;
+  padding: 7px 13px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-family: 'Noto Sans KR', sans-serif;
+  outline: none;
+}
+.chat-input:focus { border-color: var(--amber); }
+.chat-send {
+  background: var(--amber);
+  border: none;
+  border-radius: 20px;
+  padding: 7px 14px;
+  color: #000;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: opacity 0.2s;
+}
+.chat-send:active { opacity: 0.8; }
+
+/* ===== SHOP PANEL ===== */
+.shop-header {
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid #222;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.shop-title { font-family: 'Black Han Sans', sans-serif; font-size: 0.95rem; color: var(--gold); }
+.coin-balance {
+  background: var(--surface2);
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shop-scroll { flex: 1; overflow-y: auto; padding: 12px 12px 20px; }
+
+.cash-charge-area {
+  background: var(--surface2);
+  border: 1px solid #2a2a3a;
+  border-radius: 12px;
+  padding: 13px;
+  margin-bottom: 4px;
+}
+.charge-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--amber);
+}
+.charge-notice {
+  font-size: 0.62rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+.charge-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.charge-btn {
+  padding: 10px 6px;
+  background: var(--surface);
+  border: 1px solid #333;
+  border-radius: 9px;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.5;
+  transition: all 0.2s;
+}
+.charge-btn:hover { background: rgba(245,166,35,0.08); border-color: var(--amber); }
+
+.section-title {
+  font-size: 0.65rem;
+  color: var(--dim);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin: 14px 0 8px;
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.shop-item {
+  background: var(--surface2);
+  border: 1px solid #2a2a3a;
+  border-radius: 12px;
+  padding: 13px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.shop-item:active { transform: scale(0.97); }
+.shop-item:hover:not(.owned) { border-color: var(--amber); transform: translateY(-2px); }
+.shop-item.owned { border-color: rgba(68,255,136,0.4); }
+.item-preview { font-size: 1.8rem; margin-bottom: 5px; }
+.item-name { font-size: 0.78rem; font-weight: 700; margin-bottom: 3px; }
+.item-desc { font-size: 0.62rem; color: var(--dim); margin-bottom: 8px; line-height: 1.4; }
+.item-price {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: rgba(255,215,0,0.08);
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 12px;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  color: var(--gold);
+}
+.owned-badge {
+  position: absolute;
+  top: 7px; right: 7px;
+  background: #44ff88;
+  color: #000;
+  font-size: 0.58rem;
+  border-radius: 6px;
+  padding: 2px 5px;
+  font-weight: 700;
+}
+
+/* Payment Modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid #333;
+  border-radius: 18px;
+  padding: 26px 22px;
+  width: 290px;
+  text-align: center;
+  transform: scale(0.9);
+  transition: transform 0.3s;
+}
+.modal-overlay.open .modal-box { transform: scale(1); }
+.modal-box h3 { font-family: 'Black Han Sans', sans-serif; font-size: 1.1rem; margin-bottom: 5px; color: var(--amber); }
+.modal-box p { font-size: 0.75rem; color: var(--dim); margin-bottom: 14px; }
+.modal-amount { font-size: 1.9rem; font-weight: 900; color: var(--gold); margin-bottom: 18px; }
+.pay-methods { display: flex; flex-direction: column; gap: 9px; margin-bottom: 12px; }
+.pay-btn {
+  padding: 13px; border-radius: 11px; border: none;
+  font-size: 0.9rem; font-weight: 700; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.pay-btn:active { transform: scale(0.97); opacity: 0.9; }
+.pay-kakao { background: #fee500; color: #3a1d0f; }
+.pay-toss  { background: #0064ff; color: #fff; }
+.pay-cancel {
+  background: transparent; border: 1px solid #333;
+  color: var(--dim); border-radius: 10px; padding: 10px;
+  cursor: pointer; font-size: 0.78rem;
+  font-family: 'Noto Sans KR', sans-serif; width: 100%;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: rgba(22,22,30,0.97);
+  border: 1px solid var(--amber);
+  color: var(--text);
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  opacity: 0; transition: all 0.3s;
+  z-index: 999; white-space: nowrap;
+  pointer-events: none;
+  max-width: 90vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('main')" id="tab-main">🚬 담배</div>
+  <div class="tab" onclick="switchTab('room')" id="tab-room">🏠 흡연방</div>
+  <div class="tab" onclick="switchTab('shop')" id="tab-shop">🛒 상점</div>
+</div>
+
+<!-- ===== MAIN PANEL ===== -->
+<div class="panel active" id="panel-main">
+  <div class="main-header">
+    <h1>비흡연자를 위한 담타 ULTRA</h1>
+  </div>
+
+  <div id="scene">
+    <div id="wind-overlay"></div>
+    <div id="fog-layer"></div>
+
+    <!-- 맞담 친구 담배 -->
+    <div id="friend-cig">
+      <div class="f-tip"><div class="f-ember"></div></div>
+      <div class="f-body"></div>
+      <div class="f-filter"></div>
+    </div>
+    <div id="friend-label">김덕배 (대기중...)</div>
+
+    <!-- 메인 담배 -->
+    <div id="cig-wrapper">
+      <div id="cigarette">
+        <div class="cig-tip">
+          <div class="ember"></div>
+        </div>
+        <div class="cig-body"></div>
+        <div class="cig-filter"></div>
+        <div id="chopstick-holder">
+          <svg viewBox="0 0 90 32" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="4" width="5" height="26" rx="2.5" fill="#7a4f2a" transform="rotate(-10 6 4)"/>
+            <rect x="13" y="4" width="3" height="24" rx="1.5" fill="#5c3516" transform="rotate(-10 13 4)"/>
+            <rect x="79" y="4" width="5" height="26" rx="2.5" fill="#7a4f2a" transform="rotate(10 79 4)"/>
+            <rect x="74" y="4" width="3" height="24" rx="1.5" fill="#5c3516" transform="rotate(10 74 4)"/>
+            <path d="M18 24 Q45 31 72 24" stroke="#7a4f2a" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M19 24 Q45 30 71 24" stroke="#c4864e" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.5"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <p id="hint">꾹 눌러보세요</p>
+  </div>
+
+  <div class="main-controls">
+    <button class="ctrl-btn" onclick="ventilate()">
+      <span class="icon">🪟</span>환기
+    </button>
+    <button class="ctrl-btn" id="btn-matchdam" onclick="requestMatchdam()">
+      <span class="icon">🤝</span>맞담
+    </button>
+    <button class="ctrl-btn locked" id="btn-skin" onclick="gotoShop()">
+      <span class="icon">🎨</span>담꾸
+    </button>
+    <button class="ctrl-btn locked" id="btn-chopstick" onclick="gotoShop()">
+      <span class="icon">🥢</span>젓가락
+    </button>
+  </div>
+</div>
+
+<!-- ===== ROOM PANEL ===== -->
+<div class="panel" id="panel-room">
+  <div class="room-header">
+    <div class="room-title">🚬 비흡연방 #1337</div>
+    <div class="room-count"><span class="live-dot"></span><span id="room-count-txt">1명 흡연중</span></div>
+  </div>
+  <div class="smokers-area" id="smokers-area"></div>
+  <div class="chat-area" id="chat-area">
+    <div class="chat-msg system">📡 흡연방에 접속했습니다 (가상 서버)</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chat-input" placeholder="채팅..." maxlength="50"
+      onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">전송</button>
+  </div>
+</div>
+
+<!-- ===== SHOP PANEL ===== -->
+<div class="panel" id="panel-shop">
+  <div class="shop-header">
+    <div class="shop-title">💰 담타 상점</div>
+    <div class="coin-balance">🪙 <span id="coin-display">0</span> 담전</div>
+  </div>
+  <div class="shop-scroll">
+    <div class="cash-charge-area">
+      <div class="charge-title">💳 담전 충전</div>
+      <div class="charge-notice">⚠️ 실제 결제가 아닙니다. 가상 게임 재화입니다.</div>
+      <div class="charge-options">
+        <button class="charge-btn" onclick="openPay(1000,100)">₩1,000<br><span style="color:var(--gold)">🪙 100</span></button>
+        <button class="charge-btn" onclick="openPay(5000,600)">₩5,000<br><span style="color:var(--gold)">🪙 600</span></button>
+        <button class="charge-btn" onclick="openPay(10000,1500)">₩10,000<br><span style="color:var(--gold)">🪙 1,500</span></button>
+        <button class="charge-btn" onclick="openPay(30000,5500)">₩30,000<br><span style="color:var(--gold)">🪙 5,500 🔥</span></button>
+      </div>
+    </div>
+
+    <div class="section-title">담배 스킨</div>
+    <div class="shop-grid">
+      <div class="shop-item" id="item-gold" onclick="buyItem('gold',200)">
+        <div class="item-preview">✨</div>
+        <div class="item-name">황금 담배</div>
+        <div class="item-desc">부자처럼 피워요</div>
+        <div class="item-price">🪙 200</div>
+      </div>
+      <div class="shop-item" id="item-menthol" onclick="buyItem('menthol',150)">
+        <div class="item-preview">🌿</div>
+        <div class="item-name">멘솔 스킨</div>
+        <div class="item-desc">시원~한 느낌</div>
+        <div class="item-price">🪙 150</div>
+      </div>
+      <div class="shop-item" id="item-diamond" onclick="buyItem('diamond',500)">
+        <div class="item-preview">💎</div>
+        <div class="item-name">다이아 담배</div>
+        <div class="item-desc">반짝반짝 프리미엄</div>
+        <div class="item-price">🪙 500</div>
+      </div>
+      <div class="shop-item" id="item-rainbow" onclick="buyItem('rainbow',300)">
+        <div class="item-preview">🌈</div>
+        <div class="item-name">무지개 담배</div>
+        <div class="item-desc">형형색색 오색찬란</div>
+        <div class="item-price">🪙 300</div>
+      </div>
+      <div class="shop-item" id="item-black" onclick="buyItem('black',250)">
+        <div class="item-preview">🖤</div>
+        <div class="item-name">블랙 담배</div>
+        <div class="item-desc">쿨한 올블랙</div>
+        <div class="item-price">🪙 250</div>
+      </div>
+      <div class="shop-item" id="item-heavysmoke" onclick="buyItem('heavysmoke',100)">
+        <div class="item-preview">💨</div>
+        <div class="item-name">폭연 모드</div>
+        <div class="item-desc">연기 2배! 숨막혀~</div>
+        <div class="item-price">🪙 100</div>
+      </div>
+    </div>
+
+    <div class="section-title">프리미엄 아이템</div>
+    <div class="shop-grid">
+      <div class="shop-item" id="item-chopstick" onclick="buyItem('chopstick',800)" style="grid-column: 1 / -1;">
+        <div class="item-preview">🥢</div>
+        <div class="item-name">젓가락 담배받침</div>
+        <div class="item-desc">고급 도자기 젓가락으로 우아하게 담배를 받쳐드립니다<br>VIP 전용 아이템</div>
+        <div class="item-price">🪙 800</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="pay-modal">
+  <div class="modal-box">
+    <h3>💳 담전 충전</h3>
+    <p>비흡연자도 살 수 있는 가상 재화입니다</p>
+    <div class="modal-amount" id="modal-amt">₩0</div>
+    <div class="pay-methods">
+      <button class="pay-btn pay-kakao" onclick="completePay('카카오페이')">🟡 카카오페이</button>
+      <button class="pay-btn pay-toss" onclick="completePay('토스페이')">💙 토스페이</button>
+    </div>
+    <button class="pay-cancel" onclick="closePay()">취소</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+const G = {
+  smoking: false,
+  smokeInt: null,
+  smokeInt2: null,
+  lit: false,
+  coins: 0,
+  owned: new Set(),
+  skin: null,
+  heavySmoke: false,
+  chopstick: false,
+  ventilating: false,
+  matchdam: false,
+  matchdamDone: false,
+  pendingPay: { won: 0, coins: 0 },
+  fogLevel: 0,       // 0 ~ 1
+  fogDecayInt: null, // slowly dissipates over time when not smoking
+};
+
+// ===== DOM =====
+const cigEl    = document.getElementById('cigarette');
+const sceneEl  = document.getElementById('scene');
+const hintEl   = document.getElementById('hint');
+const wrapEl   = document.getElementById('cig-wrapper');
+const friendEl = document.getElementById('friend-cig');
+const labelEl  = document.getElementById('friend-label');
+
+// ===== UTILS =====
+let toastTimer;
+function showToast(msg, ms = 2600) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function updateCoins() {
+  document.getElementById('coin-display').textContent = G.coins.toLocaleString();
+}
+
+// ===== TABS =====
+function switchTab(name) {
+  ['main','room','shop'].forEach(n => {
+    document.getElementById('tab-' + n).classList.toggle('active', n === name);
+    document.getElementById('panel-' + n).classList.toggle('active', n === name);
+  });
+}
+
+function gotoShop() {
+  showToast('🛒 상점에서 구매하세요!');
+  switchTab('shop');
+}
+
+// ===== SMOKING =====
+function startSmoking() {
+  if (G.smoking) return;
+  if (!G.lit) {
+    G.lit = true;
+    cigEl.classList.add('lit');
+    hintEl.textContent = '흡연중... 건강엔 이상없습니다 😌';
+    showToast('🔥 담배에 불이 붙었습니다!');
+  }
+  G.smoking = true;
+  const spd = G.heavySmoke ? 38 : 75;
+  G.smokeInt = setInterval(spawnSmoke, spd);
+  if (G.heavySmoke) G.smokeInt2 = setInterval(spawnSmoke, 55);
+}
+
+function stopSmoking() {
+  if (!G.smoking) return;
+  G.smoking = false;
+  clearInterval(G.smokeInt);
+  clearInterval(G.smokeInt2);
+  G.smokeInt = G.smokeInt2 = null;
+  if (G.lit) hintEl.textContent = '다시 꾹 눌러보세요';
+}
+
+function updateFog() {
+  const fog = document.getElementById('fog-layer');
+  // Fog: rgba grey that gets more opaque, max ~0.55 opacity (very foggy but still visible)
+  const alpha = G.fogLevel * 0.55;
+  fog.style.background = `rgba(170, 175, 185, ${alpha.toFixed(3)})`;
+
+  // Foggy enough to warn
+  if (G.fogLevel > 0.6 && !G._fogWarned) {
+    G._fogWarned = true;
+    showToast('😤 연기가 너무 짙어요! 환기가 필요합니다', 3000);
+  }
+  if (G.fogLevel <= 0.3) G._fogWarned = false;
+}
+
+// Slowly dissipate fog when not smoking (natural ventilation)
+setInterval(() => {
+  if (!G.smoking && G.fogLevel > 0) {
+    G.fogLevel = Math.max(0, G.fogLevel - 0.003);
+    updateFog();
+  }
+}, 500);
+
+function spawnSmoke() {
+  const p = document.createElement('div');
+  p.className = 'smoke-particle';
+
+  const sz  = 15 + Math.random() * 22;
+  const dur = 2.0 + Math.random() * 2.0;
+  const dx1 = (Math.random() - 0.5) * 70;
+  const dx2 = (Math.random() - 0.5) * 120;
+  const dx3 = G.ventilating
+    ? 200 + Math.random() * 100
+    : (Math.random() - 0.5) * 170;
+
+  const tip  = cigEl.querySelector('.cig-tip');
+  const tR   = tip.getBoundingClientRect();
+  const sR   = sceneEl.getBoundingClientRect();
+  const sx   = (tR.left - sR.left) + tR.width / 2 - sz / 2;
+  const sy   = (tR.top  - sR.top)  - sz / 2;
+
+  const r = 155 + Math.floor(Math.random() * 50);
+  const g = 155 + Math.floor(Math.random() * 50);
+  const b = 168 + Math.floor(Math.random() * 35);
+  const a = 0.45 + Math.random() * 0.35;
+
+  p.style.cssText = `
+    width:${sz}px; height:${sz}px;
+    left:${sx}px; top:${sy}px;
+    --dx1:${dx1}px; --dx2:${dx2}px; --dx3:${dx3}px;
+    animation-duration:${dur}s;
+    background: radial-gradient(circle, rgba(${r},${g},${b},${a}) 0%, rgba(${r},${g},${b},0) 72%);
+  `;
+  sceneEl.appendChild(p);
+  setTimeout(() => p.remove(), dur * 1000);
+
+  // Accumulate fog
+  G.fogLevel = Math.min(1, G.fogLevel + 0.004);
+  updateFog();
+}
+
+cigEl.addEventListener('mousedown', startSmoking);
+document.addEventListener('mouseup', stopSmoking);
+cigEl.addEventListener('touchstart', e => { e.preventDefault(); startSmoking(); }, { passive: false });
+document.addEventListener('touchend', stopSmoking);
+
+// ===== 환기 =====
+function ventilate() {
+  if (G.ventilating) return;
+  G.ventilating = true;
+  const ov = document.getElementById('wind-overlay');
+  ov.classList.add('active');
+  showToast('🪟 환기 중! 연기가 날아갑니다~');
+
+  document.querySelectorAll('.smoke-particle').forEach(p => {
+    p.style.transition = 'all 0.9s ease';
+    p.style.transform  = `translateX(${180 + Math.random()*120}px) translateY(-${Math.random()*40}px) scale(0.5)`;
+    p.style.opacity    = '0';
+    setTimeout(() => p.remove(), 950);
+  });
+
+  setTimeout(() => {
+    ov.classList.remove('active');
+    G.ventilating = false;
+    // Clear fog
+    const fog = document.getElementById('fog-layer');
+    fog.classList.add('clearing');
+    G.fogLevel = 0;
+    updateFog();
+    setTimeout(() => fog.classList.remove('clearing'), 1300);
+  }, 1200);
+}
+
+// ===== 맞담 =====
+function requestMatchdam() {
+  const btn = document.getElementById('btn-matchdam');
+
+  if (G.matchdam) {
+    G.matchdam = false;
+    G.matchdamDone = false;
+    friendEl.classList.remove('visible');
+    labelEl.classList.remove('visible');
+    btn.classList.remove('highlight');
+    btn.textContent = '';
+    btn.innerHTML = '<span class="icon">🤝</span>맞담';
+    return;
+  }
+
+  G.matchdam = true;
+  btn.classList.add('highlight');
+  btn.innerHTML = '<span class="icon">❌</span>취소';
+  friendEl.classList.add('visible');
+  labelEl.classList.add('visible');
+  labelEl.textContent = '김덕배 (맞담 수락함 👍)';
+  showToast('🤝 김덕배가 맞담을 수락했습니다!');
+
+  setTimeout(() => {
+    if (!G.matchdam) return;
+    doMatchdam();
+  }, 2200);
+}
+
+function doMatchdam() {
+  labelEl.textContent = '김덕배 (맞담 중... 🚬)';
+  showToast('🚬🚬 맞담 중...');
+
+  wrapEl.style.animation = 'matchdam-anim 2s ease forwards';
+
+  setTimeout(() => {
+    wrapEl.style.animation = '';
+    if (!G.lit) {
+      G.lit = true;
+      cigEl.classList.add('lit');
+      showToast('🔥 맞담으로 불 붙임 성공!');
+    }
+    G.matchdamDone = true;
+    labelEl.textContent = '김덕배 (흡연중 😌)';
+    hintEl.textContent = '맞담 성공! 꾹 눌러서 피우세요';
+  }, 2000);
+}
+
+// ===== SHOP =====
+const ITEMS = {
+  gold:       { name: '황금 담배',      price: 200 },
+  menthol:    { name: '멘솔 스킨',      price: 150 },
+  diamond:    { name: '다이아 담배',     price: 500 },
+  rainbow:    { name: '무지개 담배',     price: 300 },
+  black:      { name: '블랙 담배',       price: 250 },
+  heavysmoke: { name: '폭연 모드',       price: 100 },
+  chopstick:  { name: '젓가락 담배받침', price: 800 },
+};
+
+function openPay(won, coins) {
+  G.pendingPay = { won, coins };
+  document.getElementById('modal-amt').textContent = `₩${won.toLocaleString()} → 🪙${coins.toLocaleString()}`;
+  document.getElementById('pay-modal').classList.add('open');
+}
+function closePay() {
+  document.getElementById('pay-modal').classList.remove('open');
+}
+function completePay(method) {
+  closePay();
+  showToast(`💳 ${method} 처리 중...`);
+  setTimeout(() => {
+    G.coins += G.pendingPay.coins;
+    updateCoins();
+    showToast(`✅ 🪙${G.pendingPay.coins.toLocaleString()} 담전 충전 완료!`, 3000);
+  }, 1400);
+}
+
+function buyItem(id, price) {
+  if (G.owned.has(id)) {
+    applyItem(id);
+    showToast(`✅ ${ITEMS[id].name} 적용 완료!`);
+    return;
+  }
+  if (G.coins < price) {
+    showToast(`🪙 담전 부족! (보유: ${G.coins}, 필요: ${price})`);
+    return;
+  }
+  G.coins -= price;
+  updateCoins();
+  G.owned.add(id);
+  applyItem(id);
+
+  const el = document.getElementById('item-' + id);
+  if (el) {
+    el.classList.add('owned');
+    if (!el.querySelector('.owned-badge')) {
+      const b = document.createElement('div');
+      b.className = 'owned-badge';
+      b.textContent = '보유';
+      el.appendChild(b);
+    }
+    const priceEl = el.querySelector('.item-price');
+    if (priceEl) priceEl.textContent = '✅ 적용됨';
+    el.onclick = () => { applyItem(id); showToast(`✅ ${ITEMS[id].name} 적용!`); };
+  }
+
+  unlockButtons(id);
+  showToast(`🎉 ${ITEMS[id].name} 구매 완료!`, 3000);
+}
+
+function applyItem(id) {
+  if (['gold','menthol','diamond','rainbow','black'].includes(id)) {
+    cigEl.classList.remove('skin-gold','skin-menthol','skin-diamond','skin-rainbow','skin-black');
+    G.skin = id;
+    cigEl.classList.add('skin-' + id);
+  } else if (id === 'heavysmoke') {
+    G.heavySmoke = true;
+  } else if (id === 'chopstick') {
+    G.chopstick = true;
+    document.getElementById('chopstick-holder').classList.add('visible');
+  }
+}
+
+function unlockButtons(id) {
+  if (['gold','menthol','diamond','rainbow','black'].includes(id)) {
+    const btn = document.getElementById('btn-skin');
+    btn.classList.remove('locked');
+    btn.innerHTML = '<span class="icon">🎨</span>담꾸';
+    btn.onclick = () => { switchTab('shop'); };
+  }
+  if (id === 'chopstick') {
+    const btn = document.getElementById('btn-chopstick');
+    btn.classList.remove('locked');
+    btn.innerHTML = '<span class="icon">🥢</span>젓가락';
+    btn.onclick = () => {
+      G.chopstick = !G.chopstick;
+      document.getElementById('chopstick-holder').classList.toggle('visible', G.chopstick);
+      showToast(G.chopstick ? '🥢 젓가락 받침 장착!' : '🥢 젓가락 받침 해제');
+    };
+  }
+}
+
+// ===== ROOM (Simulated) =====
+const BOTS = [
+  { name: '비흡연러_김씨',   emoji: '👨', status: '하루 3담 도전 중',        color: '#f5a623' },
+  { name: '담배처음박씨',     emoji: '😰', status: '첫 담타... 연기 신기하다', color: '#ff6b6b' },
+  { name: '이세계흡연자',     emoji: '🧙', status: '10년 비흡연 베테랑',       color: '#9b7de8' },
+  { name: '건강한최씨',       emoji: '💪', status: '헬스 후 담타',             color: '#44ff88' },
+  { name: '야근중_정대리',    emoji: '😤', status: '스트레스 해소 중',         color: '#44d4ff' },
+  { name: '시험끝_오학생',    emoji: '📚', status: '시험 끝나고 한 모금',     color: '#ff99cc' },
+  { name: 'VIP황금유저',      emoji: '👑', status: '💎 다이아 담배 장착 중',  color: '#ffd700' },
+  { name: '흡연방지킴이',     emoji: '🛡️', status: '방을 지키고 있습니다',    color: '#88aaff' },
+];
+
+const CHAT = [
+  '담타 ㄱㄱ', '오늘도 한 모금 ㅋㅋ', '환기 좀 해야겠다', '연기 이쁘다',
+  '여기 사람 많네요', '맞담 하실분?', '황금담배 어서 사세요', '담전 충전했다 ㄷㄷ',
+  '이거 중독성 있음', '비흡연인데 왜 힐링됨?', '연기 더 많이 나왔으면',
+  '젓가락 받침 실물 사고싶다', '환기하니까 시원하다', '폭연모드 ㄷㄷ 숨막힌다',
+  '맞담 성공!!!', '담꾸 예쁘게 했다', '상점에 아이템 더 없나요',
+];
+
+let activeUsers = [];
+let botPool = [...BOTS];
+
+const smokersArea = document.getElementById('smokers-area');
+const chatArea = document.getElementById('chat-area');
+
+function addBot(bot) {
+  if (activeUsers.find(u => u.name === bot.name)) return;
+  activeUsers.push(bot);
+
+  const card = document.createElement('div');
+  card.className = 'smoker-card';
+  card.id = 'bot-' + bot.name;
+  card.innerHTML = `
+    <div class="smoker-avatar" style="background:${bot.color}18;border:1px solid ${bot.color}44">${bot.emoji}</div>
+    <div class="smoker-info">
+      <div class="smoker-name" style="color:${bot.color}">${bot.name}</div>
+      <div class="smoker-status">${bot.status}</div>
+    </div>
+    <div class="smoker-cig-anim">🚬💨</div>
+  `;
+  smokersArea.appendChild(card);
+  updateRoomCount();
+  sysMsg(`${bot.emoji} ${bot.name}님이 입장했습니다`);
+}
+
+function removeBot(bot) {
+  activeUsers = activeUsers.filter(u => u.name !== bot.name);
+  const card = document.getElementById('bot-' + bot.name);
+  if (card) card.remove();
+  updateRoomCount();
+  sysMsg(`${bot.emoji} ${bot.name}님이 퇴장했습니다`);
+  botPool.push(bot);
+}
+
+function updateRoomCount() {
+  document.getElementById('room-count-txt').textContent = `${activeUsers.length + 1}명 흡연중`;
+}
+
+function chatMsg(nick, msg, color, isYou = false) {
+  const d = document.createElement('div');
+  d.className = 'chat-msg' + (isYou ? ' you' : '');
+  d.innerHTML = `<span class="nick" style="color:${color || '#f5a623'}">${nick}</span>${msg}`;
+  chatArea.appendChild(d);
+  chatArea.scrollTop = chatArea.scrollHeight;
+  while (chatArea.children.length > 60) chatArea.removeChild(chatArea.firstChild);
+}
+
+function sysMsg(msg) {
+  const d = document.createElement('div');
+  d.className = 'chat-msg system';
+  d.textContent = msg;
+  chatArea.appendChild(d);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  chatMsg('나', msg, '#7adfff', true);
+  inp.value = '';
+  // random bot reply
+  if (activeUsers.length > 0 && Math.random() > 0.3) {
+    const bot = activeUsers[Math.floor(Math.random() * activeUsers.length)];
+    setTimeout(() => {
+      chatMsg(bot.name, CHAT[Math.floor(Math.random() * CHAT.length)], bot.color);
+    }, 800 + Math.random() * 2000);
+  }
+}
+
+// Simulate room
+(function startRoom() {
+  let idx = 0;
+  const boot = () => { if (idx < BOTS.length) addBot(BOTS[idx++]); };
+  setTimeout(boot, 800);
+  setTimeout(boot, 2000);
+
+  setInterval(() => {
+    const r = Math.random();
+    if (r < 0.25 && idx < botPool.length) {
+      addBot(botPool[idx < botPool.length ? idx++ : Math.floor(Math.random()*botPool.length)]);
+    } else if (r < 0.40 && activeUsers.length > 2) {
+      removeBot(activeUsers[Math.floor(Math.random() * activeUsers.length)]);
+    } else if (activeUsers.length > 0) {
+      const bot = activeUsers[Math.floor(Math.random() * activeUsers.length)];
+      chatMsg(bot.name, CHAT[Math.floor(Math.random() * CHAT.length)], bot.color);
+    }
+  }, 4000);
+})();
+</script>
+</body>
+</html>
